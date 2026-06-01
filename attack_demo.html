@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Injection Demo — SecureVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0e1a;--card:#111827;--border:#1e2d45;--accent:#00d4ff;--accent2:#ff4d6d;--green:#00ff88;--yellow:#ffd166;--text:#e2e8f0;--muted:#64748b;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:2rem;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+  .wrapper{max-width:900px;margin:0 auto;position:relative;z-index:1;}
+  nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;}
+  .logo{font-family:var(--mono);color:var(--accent);font-size:1.1rem;}
+  .back{font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-decoration:none;padding:0.4rem 0.8rem;border:1px solid var(--border);border-radius:6px;}
+  .back:hover{color:var(--accent);border-color:var(--accent);}
+
+  h2{font-family:var(--mono);font-size:1.6rem;color:#fff;margin-bottom:0.5rem;}
+  .subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:2rem;}
+
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);}
+  .card-title{font-family:var(--mono);font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1.25rem;}
+
+  .attack-list{display:flex;flex-direction:column;gap:0.5rem;}
+  .attack-btn{
+    background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.2);
+    color:var(--accent2);font-family:var(--mono);font-size:0.72rem;
+    padding:0.5rem 0.75rem;border-radius:6px;cursor:pointer;text-align:left;
+    transition:all 0.2s;
+  }
+  .attack-btn:hover{background:rgba(255,77,109,0.18);border-color:rgba(255,77,109,0.5);}
+  .attack-label{font-size:0.65rem;color:var(--muted);margin-bottom:0.2rem;font-family:var(--mono);}
+
+  .input-row{display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:1rem;}
+  textarea{
+    flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+    border-radius:8px;padding:0.75rem;color:var(--text);font-family:var(--mono);
+    font-size:0.8rem;resize:vertical;min-height:80px;outline:none;
+  }
+  textarea:focus{border-color:var(--accent);}
+  .test-btn{
+    padding:0.7rem 1.2rem;background:var(--accent);border:none;border-radius:8px;
+    color:#000;font-family:var(--mono);font-size:0.8rem;font-weight:700;cursor:pointer;
+    white-space:nowrap;align-self:flex-end;
+  }
+  .test-btn:hover{opacity:0.85;}
+
+  .result{
+    padding:1rem;border-radius:8px;font-family:var(--mono);font-size:0.78rem;
+    border:1px solid var(--border);background:rgba(255,255,255,0.02);
+    min-height:100px;line-height:1.8;
+    display:none;
+  }
+  .result.show{display:block;}
+  .result.attack{background:rgba(255,77,109,0.08);border-color:rgba(255,77,109,0.3);}
+  .result.clean{background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.25);}
+
+  .badge{
+    display:inline-block;padding:0.2rem 0.5rem;border-radius:4px;
+    font-size:0.65rem;font-weight:700;margin-right:0.5rem;
+  }
+  .badge.CRITICAL{background:rgba(255,77,109,0.3);color:#ff4d6d;}
+  .badge.HIGH{background:rgba(255,150,0,0.25);color:#ff9600;}
+  .badge.MEDIUM{background:rgba(255,209,102,0.2);color:#ffd166;}
+  .badge.LOW{background:rgba(100,116,139,0.3);color:#94a3b8;}
+  .badge.NONE{background:rgba(0,255,136,0.15);color:#00ff88;}
+
+  .full{grid-column:1/-1;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <nav>
+    <div class="logo">SecureVault — Attack Demo</div>
+    <a class="back" href="/">← Back</a>
+  </nav>
+
+  <h2>Live SQL Injection Tester</h2>
+  <p class="subtitle">Type any input below or click a preset attack. The system will detect and classify it in real time.</p>
+
+  <div class="layout">
+    <div class="card">
+      <div class="card-title">⚡ Preset Attacks (click to load)</div>
+      <div class="attack-list">
+        <div class="attack-label">Classic</div>
+        <button class="attack-btn" onclick="load(`' OR '1'='1`)">Tautology: ' OR '1'='1</button>
+        <button class="attack-btn" onclick="load(`admin'--`)">Comment truncation: admin'--</button>
+        <button class="attack-btn" onclick="load(`' OR 1=1--`)">Boolean bypass: ' OR 1=1--</button>
+
+        <div class="attack-label" style="margin-top:0.75rem">Destructive</div>
+        <button class="attack-btn" onclick="load(`'; DROP TABLE users;--`)">DROP TABLE attack</button>
+        <button class="attack-btn" onclick="load(`'; DELETE FROM users WHERE 1=1;--`)">DELETE all rows</button>
+
+        <div class="attack-label" style="margin-top:0.75rem">Data extraction</div>
+        <button class="attack-btn" onclick="load(`' UNION SELECT username,password FROM users--`)">UNION SELECT dump</button>
+        <button class="attack-btn" onclick="load(`' UNION SELECT table_name FROM information_schema.tables--`)">Schema probing</button>
+
+        <div class="attack-label" style="margin-top:0.75rem">Blind / Time-based</div>
+        <button class="attack-btn" onclick="load(`' AND SLEEP(5)--`)">Time-based blind: SLEEP(5)</button>
+        <button class="attack-btn" onclick="load(`'; WAITFOR DELAY '0:0:5'--`)">MSSQL WAITFOR DELAY</button>
+
+        <div class="attack-label" style="margin-top:0.75rem">Encoded bypass</div>
+        <button class="attack-btn" onclick="load(`%27%20OR%20%271%27%3D%271`)">URL-encoded ' OR '1'='1</button>
+
+        <div class="attack-label" style="margin-top:0.75rem">✅ Clean input</div>
+        <button class="attack-btn" style="border-color:rgba(0,255,136,0.3);color:#00ff88;background:rgba(0,255,136,0.05)" onclick="load(`john_doe`)">Normal username: john_doe</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 Test Input</div>
+      <div class="input-row">
+        <textarea id="inputBox" placeholder="Type or paste any input to test..."></textarea>
+      </div>
+      <button class="test-btn" onclick="testInput()">→ Analyse</button>
+
+      <div style="margin-top:1.25rem;">
+        <div class="card-title">Result</div>
+        <div id="result" class="result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function load(val) {
+  document.getElementById('inputBox').value = val;
+  testInput();
+}
+
+async function testInput() {
+  const input = document.getElementById('inputBox').value.trim();
+  if (!input) return;
+  const res = await fetch('/api/test', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({input, field:'demo'})
+  });
+  const data = await res.json();
+  const el = document.getElementById('result');
+  el.classList.add('show');
+  el.classList.toggle('attack', data.is_attack);
+  el.classList.toggle('clean', !data.is_attack);
+  el.innerHTML = data.is_attack
+    ? `<span class="badge ${data.level}">${data.level}</span><strong style="color:#ff4d6d">🚨 ATTACK DETECTED</strong><br><br>${data.reason}<br><br><span style="color:var(--muted)">Input blocked. Logged to attack_log.</span>`
+    : `<strong style="color:#00ff88">✅ CLEAN INPUT</strong><br><br>${data.reason}<br><br><span style="color:var(--muted)">Input passed Layer 1. Parameterised query (Layer 2) will handle the rest.</span>`;
+}
+document.getElementById('inputBox').addEventListener('keydown', e => { if(e.ctrlKey && e.key==='Enter') testInput(); });
+</script>
+</body>
+</html>

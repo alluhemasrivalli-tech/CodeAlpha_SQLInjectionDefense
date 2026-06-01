@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — SecureVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e1a; --card:#111827; --border:#1e2d45;
+    --accent:#00d4ff; --green:#00ff88; --text:#e2e8f0; --muted:#64748b;
+    --mono:'Space Mono',monospace; --sans:'DM Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:2rem;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+  .wrapper{max-width:800px;margin:0 auto;position:relative;z-index:1;}
+  nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;}
+  .logo{font-family:var(--mono);font-size:1.1rem;color:var(--accent);}
+  .nav-links{display:flex;gap:1rem;}
+  .nav-links a{font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-decoration:none;padding:0.4rem 0.8rem;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;}
+  .nav-links a:hover{color:var(--accent);border-color:var(--accent);}
+
+  h2{font-family:var(--mono);font-size:1.5rem;color:#fff;margin-bottom:0.5rem;}
+  .subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:2rem;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);}
+  .card-label{font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;}
+  .card-value{font-family:var(--mono);font-size:1rem;color:var(--text);}
+
+  .security-card{grid-column:1/-1;background:rgba(0,255,136,0.05);border-color:rgba(0,255,136,0.2);}
+  .security-card::before{background:linear-gradient(90deg,var(--green),transparent);}
+  .security-items{display:flex;flex-direction:column;gap:0.6rem;margin-top:0.5rem;}
+  .security-item{display:flex;align-items:center;gap:0.75rem;font-family:var(--mono);font-size:0.75rem;color:var(--muted);}
+  .check{color:var(--green);}
+
+  .full{grid-column:1/-1;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <nav>
+    <div class="logo">SecureVault</div>
+    <div class="nav-links">
+      <a href="/attack-demo">🧪 Attack Demo</a>
+      <a href="/logs">📋 Logs</a>
+      <a href="/logout">Logout →</a>
+    </div>
+  </nav>
+
+  <h2>Welcome, {{ profile.username }}</h2>
+  <p class="subtitle">Your data is encrypted and secured.</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Username</div>
+      <div class="card-value">{{ profile.username }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Role</div>
+      <div class="card-value">{{ profile.role }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Email (AES-256 decrypted)</div>
+      <div class="card-value">{{ profile.email }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Registered On</div>
+      <div class="card-value">{{ profile.created_at }}</div>
+    </div>
+    <div class="card security-card">
+      <div class="card-label">Active Security Protections</div>
+      <div class="security-items">
+        <div class="security-item"><span class="check">✔</span> Layer 1 — SQL injection pattern detection (15 signatures)</div>
+        <div class="security-item"><span class="check">✔</span> Layer 2 — Parameterised queries (no string interpolation)</div>
+        <div class="security-item"><span class="check">✔</span> AES-256-CBC encryption on email & phone fields</div>
+        <div class="security-item"><span class="check">✔</span> PBKDF2-HMAC-SHA256 password hashing (200,000 rounds)</div>
+        <div class="security-item"><span class="check">✔</span> Capability token session management (1-hour expiry)</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
